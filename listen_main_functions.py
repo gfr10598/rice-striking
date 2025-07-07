@@ -14,12 +14,11 @@ You May Not:
 This software is provided "as is", without warranty of any kind, express or implied. In no event shall the authors be liable for any claim, damages, or other liability.
 
 If you would like to license or publish this software commerically, please contact oliverricesolar@gmail.com
-"""
+"""  # noqa: E501
 
 import streamlit as st
 
 import numpy as np
-import time
 import pandas as pd
 from listen_classes import data
 
@@ -204,7 +203,9 @@ def do_reinforcement(Paras, Data):
         done = False
         while not done:
             for bell in range(Paras.nbells):
-                threshold = 0.01  # Need changes to be at least this good... Need to improve on this really as it's a bit arbitrary.
+                # Need changes to be at least this good... Need to improve on this really as
+                # it's a bit arbitrary.
+                threshold = 0.01
                 allcerts = []
                 count = 0
                 for row in range(len(strikes[0])):
@@ -371,11 +372,13 @@ def find_final_strikes(Paras, nested=False):
             all_is_well = check_initial_rounds(Data.strikes)
             if not all_is_well:
                 st.error(
-                    "This recording doesn't appear to start in rounds. If frequencies are confident check this is the right tower. If it is, then bugger."
+                    "This recording doesn't appear to start in rounds. If frequencies are"
+                    " confident check this is the right tower. If it is, then bugger."
                 )
                 if st.session_state.testing_mode:
                     test_error(
-                        "This recording doesn't appear to start in rounds. If frequencies are confident check this is the right tower. If it is, then bugger."
+                        "This recording doesn't appear to start in rounds. If frequencies are"
+                        " confident check this is the right tower. If it is, then bugger."
                     )
                 else:
                     st.session_state.analysis_status = 0
@@ -385,11 +388,13 @@ def find_final_strikes(Paras, nested=False):
 
             if len(Data.strikes[:, 0]) == 0:
                 st.error(
-                    "This recording doesn't appear to start in rounds. If frequencies are confident check this is the right tower. If it is, then bugger."
+                    "This recording doesn't appear to start in rounds. If frequencies are"
+                    " confident check this is the right tower. If it is, then bugger."
                 )
                 if st.session_state.testing_mode:
                     test_error(
-                        "This recording doesn't appear to start in rounds. If frequencies are confident check this is the right tower. If it is, then bugger."
+                        "This recording doesn't appear to start in rounds. If frequencies are"
+                        " confident check this is the right tower. If it is, then bugger."
                     )
                 else:
                     st.session_state.analysis_status = 0
@@ -421,10 +426,13 @@ def find_final_strikes(Paras, nested=False):
                 find_final_strikes(Paras, nested=True)
                 return
 
-        # This is probably the best place to be retroactive. allstrikes has the strikes in ABSOLUTE form. Not sure where the 'first' one comes from for the next round
-        # At this point it's probably wise to add the retroactive checker. Just go back and change the offending row, then continue from there? Can go arbitrarily far back if necessary.
+        # This is probably the best place to be retroactive. allstrikes has the strikes in
+        #  ABSOLUTE form. Not sure where the 'first' one comes from for the next round
+        # At this point it's probably wise to add the retroactive checker. Just go back and change
+        #  the offending row, then continue from there? Can go arbitrarily far back if necessary.
         # The raw Data.strikes are NOT adjusted by the start time
-        # Everything else should figure out automatically based on allstrikes, and the session state will do so as well
+        # Everything else should figure out automatically based on allstrikes, and the session
+        #  state will do so as well
 
         if len(length_log) > 0:
             if len(allstrikes) != length_log[-1]:
@@ -459,7 +467,8 @@ def find_final_strikes(Paras, nested=False):
             text="Complete until time %d seconds, after %d rows"
             % (np.max(allstrikes[-1]) * Paras.dt, len(Paras.allstrikes)),
         )
-        # st.analysis_sublog.write('Complete until time %d seconds with %d rows' % (np.max(allstrikes[-1])*Paras.dt, len(Paras.allstrikes)))
+        # st.analysis_sublog.write('Complete until time %d seconds with %d rows' %
+        # (np.max(allstrikes[-1])*Paras.dt, len(Paras.allstrikes)))
 
         st.session_state.allstrikes = np.array(allstrikes).T
         st.session_state.allcerts = np.array(allcerts).T
@@ -474,7 +483,8 @@ def find_final_strikes(Paras, nested=False):
 
 
 def filter_final_strikes(Paras):
-    # Looks for non-confident blows and attempts to put them somewhere reasonable based on the (hopefully) confident blows either side. Should make the grids look better...
+    # Looks for non-confident blows and attempts to put them somewhere reasonable based on the
+    #  (hopefully) confident blows either side. Should make the grids look better...
     # Needs to find the ratio through the change for each bell, approximately
     change_ratios = np.zeros(np.shape(st.session_state.allstrikes))
     for ri in range(len(change_ratios[0])):
@@ -501,7 +511,8 @@ def filter_final_strikes(Paras):
                     - np.min(st.session_state.allstrikes[:, ri])
                 )
                 st.session_state.allstrikes[bell, ri] = predicted_location
-    # Check that last row is indeed real. For some reason it detects fake rows with much confidence sometimes...
+    # Check that last row is indeed real. For some reason it detects fake rows with much confidence
+    #  sometimes...
     if np.median(st.session_state.allcerts[:, -1]) < 0.5:
         st.session_state.allstrikes = st.session_state.allstrikes[:, :-1]
         st.session_state.allcerts = st.session_state.allcerts[:, :-1]

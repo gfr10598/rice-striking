@@ -1,7 +1,8 @@
 """
 Copyright (C) 2025 Oliver Rice - All Rights Reserved
 
-Permission is hereby granted to any individual to use and modify this software solely for personal, non-commercial purposes.
+Permission is hereby granted to any individual to use and modify this software solely for personal,
+ non-commercial purposes.
 
 You May Not:
 
@@ -11,9 +12,11 @@ You May Not:
 
  - Use the software as part of a service, product, or offering to others.
 
-This software is provided "as is", without warranty of any kind, express or implied. In no event shall the authors be liable for any claim, damages, or other liability.
+This software is provided "as is", without warranty of any kind, express or implied. In no event
+ shall the authors be liable for any claim, damages, or other liability.
 
-If you would like to license or publish this software commerically, please contact oliverricesolar@gmail.com
+If you would like to license or publish this software commerically, please
+ contact oliverricesolar@gmail.com
 """
 
 import streamlit as st
@@ -21,11 +24,10 @@ import sys
 
 import os
 import re
-from scipy.io import wavfile
+from scipy.io import wavfile  # type: ignore
 import numpy as np
-from scipy.fftpack import fft
-from scipy.ndimage import gaussian_filter1d
-import matplotlib.pyplot as plt
+from scipy.fftpack import fft  # type: ignore
+from scipy.ndimage import gaussian_filter1d  # type: ignore
 import warnings
 
 
@@ -128,13 +130,18 @@ class parameters(object):
         nreinforces,
         npicks_mode,
     ):
+        self.fname = None  # Filename of the audio file
 
         self.dt = 0.01
         self.fcut_length = 0.125  # Length of each transform slice (in seconds)
 
-        self.transform_smoothing = 0.05  # Transform smoothing for the initial derivatives of the transform (in seconds)
-        self.frequency_range = 3  # Range over which to include frequencies in a sweep (as in, 300 will count between 300-range:frequency+range+1 etc.)
-        self.derivative_smoothing = 5  # Smoothing for the derivative (in INTEGER time lumps -- could change if necessary...)
+        # Transform smoothing for the initial derivatives of the transform (in seconds)
+        self.transform_smoothing = 0.05
+        # Range over which to include frequencies in a sweep (as in, 300 will count between
+        #  300-range:frequency+range+1 etc.)
+        self.frequency_range = 3
+        # Smoothing for the derivative (in INTEGER time lumps -- could change if necessary...)
+        self.derivative_smoothing = 5
         self.smooth_time = (
             2.0  # Smoothing over which to apply change-long changes (in seconds)
         )
@@ -153,8 +160,11 @@ class parameters(object):
             1.5  # How much to care about prominence for the initial rounds
         )
 
-        self.freq_tcut = 0.2  # How many times the average cadence to cut off for FREQUENCIES (should be identical strikes really)
-        self.freq_smoothing = 2  # How much to smooth the data when looking for frequencies (as an INTEGER)
+        # How many times the average cadence to cut off for FREQUENCIES (should be identical
+        #  strikes really)
+        self.freq_tcut = 0.2
+        # How much to smooth the data when looking for frequencies (as an INTEGER)
+        self.freq_smoothing = 2
         self.beta = 1  # How much to care whether strikes are certain when looking at frequencies
         self.freq_filter = 2  # How much to filter the frequency profiles (in INT)
 
@@ -175,7 +185,8 @@ class parameters(object):
 
         self.overall_tcut = 60.0
 
-        self.probs_adjust_factor = 2.0  # Power of the bells-hitting-each-other factor. Less on higher numbers seems favourable.
+        # Power of the bells-hitting-each-other factor. Less on higher numbers seems favourable.
+        self.probs_adjust_factor = 2.0
 
         if True:  # not st.session_state.trim_flag:
             if overall_tmax > 0.0:
@@ -229,7 +240,8 @@ class data:
         return cls.instance
 
     def __init__(self, Paras, tmin=-1, tmax=-1):
-        # This is called at the start -- can make some things like blank arrays for the nominals and the like. Can also do the FTs here etc (just once)
+        # This is called at the start -- can make some things like blank arrays for the nominals
+        #  and the like. Can also do the FTs here etc (just once)
 
         # Chnage the length of the audio as appropriate
 
@@ -267,7 +279,8 @@ class data:
         self.find_transform_derivatives(Paras)
 
         # print('__________________________________________________________________________________________')
-        # print('Calculating transform in range', cut_min_int/st.session_state.fs, 'to', cut_max_int/st.session_state.fs, 'seconds...')
+        # print('Calculating transform in range', cut_min_int/st.session_state.fs, 'to',
+        #  cut_max_int/st.session_state.fs, 'seconds...')
 
         self.test_frequencies = self.nominals  # This is the case initially
         self.frequency_profile = np.identity(
@@ -288,7 +301,8 @@ class data:
             cut_end = round(t * st.session_state.fs + Paras.fcut_int / 2)
 
             signal_cut = st.session_state.local_signal[cut_start:cut_end]
-
+            # TODO GFR - this looks as if there is no window.  Should add a Hamming
+            #  or Kaiser window?
             transform = abs(fft(signal_cut)[: len(signal_cut) // 2])
             transform = 0.5 * transform * st.session_state.fs / len(signal_cut)
 
@@ -307,6 +321,7 @@ class data:
 
         return
 
+    # GFR - this looks like rectified magnitude.
     def find_transform_derivatives(self, Paras):
         allfreqs_smooth = gaussian_filter1d(
             self.transform, round(Paras.transform_smoothing / Paras.dt), axis=0

@@ -135,7 +135,8 @@ def find_ringing_times(Paras, Data):
 
 
 def find_rough_cadence(Paras, Data):
-    # Takes the first 20 seconds or so and smooths to hell, finds peaks and figures out when times could be.
+    # Takes the first 20 seconds or so and smooths to hell, finds peaks and figures out when times
+    #  could be.
     # Probably reasonable to use the tenor here? Or just all
     # REDO this for loudness, rather than fancy probability things. Ian said so.
     # Need to isolate for frequencies though
@@ -252,7 +253,8 @@ def find_first_strikes(Paras, Data):
     # Keep in mind times are all now relative to the start time, whatever that is
 
     # Identify rhythm using these peaks -- that's the tricky bit...
-    # Look for peaks which are on their own for some time and regard them as gospel, use as a basis for the rest
+    # Look for peaks which are on their own for some time and regard them as gospel, use as a basis
+    #  for the rest
     shiftpeaks, _ = find_peaks(gaussian_filter1d(probability_shift, 3))
     shiftproms = peak_prominences(gaussian_filter1d(probability_shift, 3), shiftpeaks)[
         0
@@ -414,7 +416,8 @@ def find_first_strikes(Paras, Data):
         min(shiftpeaks) < min(second_guesses) - 0.75 * rough_cadence
         and min(second_guesses) - 1.5 * rough_cadence > Paras.ringing_start
     ):
-        # Check for strikes which are closer to the start than we've already looked at (unsteady rounds problem)
+        # Check for strikes which are closer to the start than we've already looked at (unsteady
+        #  rounds problem)
         if handstroke:
             second_guesses.insert(
                 0, second_guesses[0] - rough_interbell_gap * (nbells + 1)
@@ -423,8 +426,10 @@ def find_first_strikes(Paras, Data):
             second_guesses.insert(0, second_guesses[0] - rough_interbell_gap * (nbells))
         handstroke = not (handstroke)
 
-    handstroke_first = handstroke  # This is actually the stroke of the first recorded change, rather than the first reliable one
-    # BUT if there is silence beforehand and not much confidence, it's safe to assume it's handstroke first probably
+    # This is actually the stroke of the first recorded change, rather than the first reliable one
+    # BUT if there is silence beforehand and not much confidence, it's safe to assume it's
+    #  handstroke first probably
+    handstroke_first = handstroke
 
     if (
         Paras.ringing_start > rough_cadence * 1.5
@@ -432,7 +437,8 @@ def find_first_strikes(Paras, Data):
     ):
         handstroke_first = True
 
-    # Check for peaks close to these assumed times (deals with some variation in ringing time). Just pick the most prominent within a reasonable range, if such a thing exists
+    # Check for peaks close to these assumed times (deals with some variation in ringing time).
+    #  Just pick the most prominent within a reasonable range, if such a thing exists
     final_guesses = []
     for strike in second_guesses:
         min_limit = strike - (nbells / 3) * rough_interbell_gap
@@ -585,10 +591,11 @@ def find_first_strikes(Paras, Data):
 
     strike_certs = strike_certs * all_spacings
 
-    row_confidences = np.mean(strike_certs, axis=0)
-    bell_confidences = np.mean(strike_certs, axis=1)
-    # print('Row confidences', row_confidences)
-    # print('Bell confidences', bell_confidences)
+    if False:
+        row_confidences = np.mean(strike_certs, axis=0)
+        bell_confidences = np.mean(strike_certs, axis=1)
+        print("Row confidences", row_confidences)
+        print("Bell confidences", bell_confidences)
     # Check this is indeed handstroke or not, in case of an oddstruck tenor
     diff1s = strikes[:, 1:-1:2] - strikes[:, 0:-2:2]
     diff2s = strikes[:, 2::2] - strikes[:, 1:-1:2]
@@ -600,7 +607,8 @@ def find_first_strikes(Paras, Data):
 
     # print('Handstroke first?', handstroke_first)
 
-    # Filter out rows which probably aren't rounds from these results -- otherwise bells will get mixed up for sure
+    # Filter out rows which probably aren't rounds from these results -- otherwise bells will get
+    #  mixed up for sure
     # Establish a standard based on all the bells which aren't the tenor
     navg = min(8, 2 * len(strike_certs) // 2)
     stroke1_standard = np.mean(strike_certs[:-1, 2:navg:2])
@@ -643,7 +651,8 @@ def find_strike_times(Paras, Data, final=False):
     # Go through the rounds in turn instead of doing it bellwise
     # Allows for nicer plotting and stops mistakely hearing louder bells. Hopefully.
 
-    # Determine whether this is the start of the ringing or not... Actually, disregard the first change whatever. Usually going to be wrong...
+    # Determine whether this is the start of the ringing or not... Actually, disregard the first
+    #  change whatever. Usually going to be wrong...
 
     allstrikes = []
     allconfs = []
@@ -813,9 +822,8 @@ def find_strike_times(Paras, Data, final=False):
                     if final:
                         confs[bell] = 1.0
                     else:
-                        confs[bell] = (
-                            1.0  # Timing doesn't really matter, but prominence does -- don't want ambiguity
-                        )
+                        # Timing doesn't really matter, but prominence does -- don't want ambiguity
+                        confs[bell] = 1.0
                     certs[bell] = tvalue * sigs_range[0] / np.max(sigs)
 
                 elif len(peaks_range) > 1:
@@ -896,9 +904,9 @@ def find_strike_times(Paras, Data, final=False):
 
             if np.median(certs) < 0.01:
 
-                strikes = (
-                    []
-                )  # Not confident enough -- the difference between certs and confs was lost on me here...
+                # Not confident enough -- the difference between certs and confs was lost on me
+                #  here...
+                strikes = []
                 if len(allconfs) > 1:
                     bellconfs_individual = np.mean(np.array(allconfs)[1:, :], axis=0)
 
@@ -949,9 +957,9 @@ def find_strike_times(Paras, Data, final=False):
         end = next_end + 3.5 * round(Data.cadence_ref)
 
         if not Data.end_flag:
-            if (
-                end > len(Data.strike_probabilities[0]) - 2.5 / Paras.dt
-            ):  # This is nearing the end of the reasonable time for this cut, so don't bother any more. UNLESS it's the final one
+            if end > len(Data.strike_probabilities[0]) - 2.5 / Paras.dt:
+                # This is nearing the end of the reasonable time for this cut, so don't bother any
+                #  more. UNLESS it's the final one
                 go = False
 
     if len(allconfs) > 1:
@@ -1016,14 +1024,17 @@ def find_strike_times(Paras, Data, final=False):
 
 
 def check_for_misses(allstrikes, allcerts, last_switch):
-    # This function checks if a bell has found its way into the wrong change. If so it will produce the 'correct' strikes up to that point and disregard the rest. One hopes.
-    # Can look through allstrikes in its entirety!  Will need to implement some kind of checker to stop it getting stuck in a loop
+    # This function checks if a bell has found its way into the wrong change. If so it will produce
+    #  the 'correct' strikes up to that point and disregard the rest. One hopes.
+    # Can look through allstrikes in its entirety!  Will need to implement some kind of checker to
+    #  stop it getting stuck in a loop
 
-    # Two ways to check -- either have the 'rounds problem' of a bell staying at the front/back too long
-    # OR look for an outlier in the cadences, and work backwards until the last point at which that bell wasn't at the respective end
+    # Two ways to check -- either have the 'rounds problem' of a bell staying at the front/back too
+    #  long
+    # OR look for an outlier in the cadences, and work backwards until the last point at which that
+    #  bell wasn't at the respective end
     # The former seems to probably be the better approach
     allrows = np.array(allstrikes)
-    nrows_cut = len(allrows)
     nbells = len(allrows[0])
     yvalues = np.arange(nbells) + 1
     allcadences = []
@@ -1119,7 +1130,8 @@ def check_for_misses(allstrikes, allcerts, last_switch):
                 shift_rows[:, bells_before] = allrows[
                     start_index + 1 : end_index + 1, bells_before
                 ]
-            # Test these orders and if they're fine, continue without anything else. Should do a stroke checker too maybe? Will check with Saltburn.
+            # Test these orders and if they're fine, continue without anything else. Should do a
+            #  stroke checker too maybe? Will check with Saltburn.
             new_orders = np.zeros(np.shape(shift_rows))
             roundscount = 0
             for rir, row in enumerate(shift_rows):
@@ -1142,7 +1154,8 @@ def check_for_misses(allstrikes, allcerts, last_switch):
 
     def lookfor_front(min_index, maxcounts, allrows):
 
-        # THREE options: Either look for front, back or reset to rounds. Whichever is first or more prominent will be chosen for action. Do not do more than one!
+        # THREE options: Either look for front, back or reset to rounds. Whichever is first or more
+        #  prominent will be chosen for action. Do not do more than one!
         isfront = False
         if np.max(maxcounts[:, 0]) > 2:
             for fi_front, front_count in enumerate(maxcounts[:, 0]):
@@ -1245,9 +1258,9 @@ def check_for_misses(allstrikes, allcerts, last_switch):
         switch_flag, switch_index, shift_row = lookfor_rounds(
             min_index, static_counts, allrows
         )
-        if (
-            switch_flag
-        ):  # This is a genuine switch -- exit the main function? Depends if theres a different genuine switch first!
+        if switch_flag:
+            # This is a genuine switch -- exit the main function? Depends if theres a different
+            #  genuine switch first!
             rounds_switch_flag, rounds_switch_index, rounds_shift_row = (
                 switch_flag,
                 switch_index,
@@ -1268,9 +1281,9 @@ def check_for_misses(allstrikes, allcerts, last_switch):
         switch_flag, switch_index, shift_row = lookfor_back(
             min_index, maxcounts, allrows
         )
-        if (
-            switch_flag
-        ):  # This is a genuine switch -- exit the main function? Depends if theres a different genuine switch first!
+        if switch_flag:
+            # This is a genuine switch -- exit the main function? Depends if theres a different
+            #  genuine switch first!
             back_switch_flag, back_switch_index, back_shift_row = (
                 switch_flag,
                 switch_index,
@@ -1291,9 +1304,9 @@ def check_for_misses(allstrikes, allcerts, last_switch):
         switch_flag, switch_index, shift_row = lookfor_front(
             min_index, maxcounts, allrows
         )
-        if (
-            switch_flag
-        ):  # This is a genuine switch -- exit the main function? Depends if theres a different genuine switch first!
+        if switch_flag:
+            # This is a genuine switch -- exit the main function? Depends if theres a different
+            #  genuine switch first!
             front_switch_flag, front_switch_index, front_shift_row = (
                 switch_flag,
                 switch_index,
@@ -1356,7 +1369,8 @@ def check_for_misses(allstrikes, allcerts, last_switch):
 def do_frequency_analysis(Paras, Data):
     # Now takes existing strikes data to do this (to make reinforcing easier)
     # __________________________________________________
-    # Takes strike times and reinforces the frequencies from this. Needs nothing else, so works with the rounds too
+    # Takes strike times and reinforces the frequencies from this. Needs nothing else, so works
+    #  with the rounds too
 
     tcut = round(Data.cadence * Paras.freq_tcut)  # Peak error diminisher
 
@@ -1379,7 +1393,8 @@ def do_frequency_analysis(Paras, Data):
             Data.strike_certs[bell, :] = Data.strike_certs[bell, :] / bellsums[bell]
         else:
             Data.strike_certs[bell, :] = 1.0
-    # Try going through in turn for each set of rounds? Should reduce the order of this somewhat. BUT don't want to use bad things -- need a threshold for EACH bell
+    # Try going through in turn for each set of rounds? Should reduce the order of this somewhat.
+    # BUT don't want to use bad things -- need a threshold for EACH bell
     for si in range(nstrikes):
         # Run through each row
         strikes = Data.strikes[:, si]  # Strikes on this row.
@@ -1407,7 +1422,8 @@ def do_frequency_analysis(Paras, Data):
 
             peaks = peaks + tmin
 
-            # For each frequency, check consistency against confident strikes (threshold can be really high for that -- 99%?)
+            # For each frequency, check consistency against confident strikes (threshold can be
+            #  really high for that -- 99%?)
             for bell in range(Paras.nbells):
                 best_value = 0.0
                 min_tvalue = 1e6
@@ -1440,9 +1456,9 @@ def do_frequency_analysis(Paras, Data):
     # for bell in range(Paras.nbells):  #Normalise with the mean value perhaps
     #    allprobs[:,bell] = allprobs[:,bell]/np.mean(allprobs[:,bell])
 
-    # Do a plot of the 'frequency spectrum' for each bell, with probabilities that each one is significant
+    # Do a plot of the 'frequency spectrum' for each bell, with probabilities that each one is
+    #  significant
     # Need to take into account lots of frequencies, not just the one (which is MUCH easier)
-    # Do a plot of the 'frequency spectrum' for each bell, with probabilities that each one is significant
 
     for bell in range(Paras.nbells):
         allprobs[:, bell] = allprobs[:, bell] / np.max(allprobs[:, bell])
@@ -1512,7 +1528,8 @@ def do_frequency_analysis(Paras, Data):
         bellprobs = np.zeros(Paras.nbells)
         for bell in range(Paras.nbells):
 
-            freq_range = 2  # Put quite big perhaps to stop bell confusion. Doesn't like it, unfortunately.
+            # Put quite big perhaps to stop bell confusion. Doesn't like it, unfortunately.
+            freq_range = 2
 
             # Put some blurring in here to account for the wider peaks
             top = np.sum(allprobs[freq - freq_range : freq + freq_range + 1, bell])
@@ -1550,7 +1567,8 @@ def do_frequency_analysis(Paras, Data):
 
                     best_probs[ind, bell] = 0.0
 
-    # print('Confident frequency picks for bell', bell+1, ': ', np.sum(best_probs[:,bell] > 0.1), np.array(final_freq_ints)[best_probs[:,bell] > 0.1])
+    # print('Confident frequency picks for bell', bell+1, ': ', np.sum(best_probs[:,bell] > 0.1),
+    #  np.array(final_freq_ints)[best_probs[:,bell] > 0.1])
 
     for bell in range(Paras.nbells):
         # Filter out so there are only a few peaks on each one (will be quicker)
@@ -1593,13 +1611,6 @@ def find_strike_probabilities(Paras, Data, init=False, final=False):
 
     # Produce logs of each FREQUENCY, so don't need to loop
     for fi, freq_test in enumerate(Data.test_frequencies):
-
-        raw_slice = Data.transform[
-            :nt_reinforce,
-            freq_test - Paras.frequency_range : freq_test + Paras.frequency_range + 1,
-        ]
-        rawsum = np.sum(raw_slice**2, axis=1)
-
         diff_slice = Data.transform_derivative[
             :nt_reinforce,
             freq_test - Paras.frequency_range : freq_test + Paras.frequency_range + 1,
